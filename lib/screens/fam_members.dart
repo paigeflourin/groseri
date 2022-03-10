@@ -28,7 +28,8 @@ class _FamilyMembersState extends State<FamilyMembers> {
         "key": key,
         "name": value["name"],
         "email": value['email'],
-        "mobile": value['mobile']
+        "mobile": value['mobile'],
+        "main_user_id": value['main_user_id']
       };
     }).toList();
 
@@ -132,7 +133,8 @@ class _FamilyMembersState extends State<FamilyMembers> {
                         _createItem({
                           "name": _nameController.text,
                           "email": _emailController.text,
-                          "mobile": _mobileController.text
+                          "mobile": _mobileController.text,
+                          "main_user_id": "user01"
                         });
                       }
 
@@ -141,7 +143,8 @@ class _FamilyMembersState extends State<FamilyMembers> {
                         _updateItem(itemKey, {
                           'name': _nameController.text.trim(),
                           'email': _emailController.text.trim(),
-                          "mobile": _mobileController.text.trim()
+                          "mobile": _mobileController.text.trim(),
+                          "main_user_id": "user01"
                         });
                       }
 
@@ -166,7 +169,7 @@ class _FamilyMembersState extends State<FamilyMembers> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Grocery Trip'),
+        title: const Text('Family Members'),
       ),
       body: _items.isEmpty
           ? const Center(

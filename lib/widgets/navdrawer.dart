@@ -45,14 +45,14 @@ class NavDrawer extends StatelessWidget {
               Navigator.pushNamed(context, '/grocery-trips');
             },
           ),
-          ListTile(
-            leading: Icon(Icons.border_color),
-            title: Text('Grocery List Items'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, '/grocery-list');
-            },
-          ),
+          // ListTile(
+          //   leading: Icon(Icons.border_color),
+          //   title: Text('Grocery List Items'),
+          //   onTap: () {
+          //     Navigator.pop(context);
+          //     Navigator.pushNamed(context, '/grocery-list');
+          //   },
+          // ),
           // ListTile(
           //   leading: Icon(Icons.exit_to_app),
           //   title: Text('Logout'),

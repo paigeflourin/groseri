@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:groseri/screens/grocery_trips.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class GroceryList extends StatefulWidget {
-  const GroceryList({Key? key}) : super(key: key);
+  const GroceryList({Key? key, required this.tripDetails}) : super(key: key);
+
+  final Map<String, dynamic> tripDetails;
 
   @override
   _GroceryListState createState() => _GroceryListState();
@@ -11,8 +14,10 @@ class GroceryList extends StatefulWidget {
 
 class _GroceryListState extends State<GroceryList> {
   List<Map<String, dynamic>> _items = [];
+  //Map<String, dynamic> tripDeet;
 
-  final _grocerylist = Hive.box('grocery_list');
+  final _groceryList = Hive.box('grocery_list');
+  final _familyMemList = Hive.box('family_members');
 
   @override
   void initState() {
@@ -22,12 +27,16 @@ class _GroceryListState extends State<GroceryList> {
 
   // Get all items from the database
   void _refreshItems() {
-    final data = _grocerylist.keys.map((key) {
-      final value = _grocerylist.get(key);
+    //TODO: get the grocery list items where grocery trip ID
+
+    final data = _groceryList.keys.map((key) {
+      final value = _groceryList.get(key);
       return {
         "key": key,
-        "item name": value["item_name"],
-        "quantity": value['quantity']
+        "item_name": value["item_name"],
+        "quantity": value['quantity'],
+        "trip_id": widget.tripDetails['key'],
+        "family_members": widget.tripDetails['fam_members']
       };
     }).toList();
 
@@ -39,26 +48,26 @@ class _GroceryListState extends State<GroceryList> {
 
   // Create new item
   Future<void> _createItem(Map<String, dynamic> newItem) async {
-    await _grocerylist.add(newItem);
+    await _groceryList.add(newItem);
     _refreshItems(); // update the UI
   }
 
   // Retrieve a single item from the database by using its key
   // Our app won't use this function but I put it here for your reference
   Map<String, dynamic> _readItem(int key) {
-    final item = _grocerylist.get(key);
+    final item = _groceryList.get(key);
     return item;
   }
 
   // Update a single item
   Future<void> _updateItem(int itemKey, Map<String, dynamic> item) async {
-    await _grocerylist.put(itemKey, item);
+    await _groceryList.put(itemKey, item);
     _refreshItems(); // Update the UI
   }
 
   // Delete a single item
   Future<void> _deleteItem(int itemKey) async {
-    await _grocerylist.delete(itemKey);
+    await _groceryList.delete(itemKey);
     _refreshItems(); // update the UI
 
     // Display a snackbar
@@ -150,7 +159,7 @@ class _GroceryListState extends State<GroceryList> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Grocery list items'),
+        title: Text(widget.tripDetails['trip_name']),
       ),
       body: _items.isEmpty
           ? const Center(

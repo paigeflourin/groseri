@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:groseri/data/family_members.dart';
+import 'package:groseri/screens/grocery_list.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:intl/intl.dart';
+import 'package:multi_select_flutter/multi_select_flutter.dart';
 
 class GroceryTrips extends StatefulWidget {
   const GroceryTrips({Key? key}) : super(key: key);
@@ -13,6 +17,7 @@ class _GroceryTripsState extends State<GroceryTrips> {
   List<Map<String, dynamic>> _items = [];
 
   final _groceryTrip = Hive.box('grocery_trip');
+  final _familyMembers = Hive.box('family_members');
 
   @override
   void initState() {
@@ -28,7 +33,8 @@ class _GroceryTripsState extends State<GroceryTrips> {
         "key": key,
         "trip_name": value["trip_name"],
         "date": value['date'],
-        "fam_members": value['fam_members']
+        "fam_members": value['fam_members'],
+        "main_user_id": value['main_user_id']
       };
     }).toList();
 
@@ -36,6 +42,17 @@ class _GroceryTripsState extends State<GroceryTrips> {
       _items = data.reversed.toList();
       // we use "reversed" to sort items in order from the latest to the oldest
     });
+  }
+
+  //TODO: get fam members from table
+  List<dynamic> _getFamilyMembers() {
+    final familyMemList = Hive.box('family_members')
+        .values
+        .toList()
+        .where(
+            (fam) => fam['main_user_id'] == 'user01') //hardcoded user for now
+        .toList();
+    return familyMemList;
   }
 
   // Create new item
@@ -70,7 +87,9 @@ class _GroceryTripsState extends State<GroceryTrips> {
   // TextFields' controllers
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
-  //final   _fam_membersController = ();
+  final TextEditingController _familyMemController = TextEditingController();
+  var _selectedFamilyMembers = <Object?>[];
+  DateTime selectedDate = DateTime.now();
 
   // This function will be triggered when the floating button is pressed
   // It will also be triggered when you want to update an item
@@ -107,10 +126,22 @@ class _GroceryTripsState extends State<GroceryTrips> {
                   const SizedBox(
                     height: 10,
                   ),
-                  TextField(
+                  TextFormField(
                     controller: _dateController,
                     keyboardType: TextInputType.datetime,
                     decoration: const InputDecoration(hintText: 'Date'),
+                    onTap: () => _selectDate(context),
+                  ),
+                  MultiSelectDialogField(
+                    items: _getFamilyMembers()
+                        .map((e) => MultiSelectItem(e, e['name']))
+                        .toList(),
+                    onConfirm: (values) {
+                      _selectedFamilyMembers = values;
+                    },
+                  ),
+                  const SizedBox(
+                    height: 10,
                   ),
                   const SizedBox(
                     height: 20,
@@ -121,7 +152,8 @@ class _GroceryTripsState extends State<GroceryTrips> {
                       if (itemKey == null) {
                         _createItem({
                           "trip_name": _nameController.text,
-                          "date": _dateController.text
+                          "date": _dateController.text,
+                          "fam_members": _familyMemController.text
                         });
                       }
 
@@ -129,13 +161,15 @@ class _GroceryTripsState extends State<GroceryTrips> {
                       if (itemKey != null) {
                         _updateItem(itemKey, {
                           'trip_name': _nameController.text.trim(),
-                          'date': _dateController.text.trim()
+                          'date': _dateController.text.trim(),
+                          "fam_members": _familyMemController.text
                         });
                       }
 
                       // Clear the text fields
                       _nameController.text = '';
                       _dateController.text = '';
+                      _familyMemController.text = '';
 
                       Navigator.of(context).pop(); // Close the bottom sheet
                     },
@@ -147,6 +181,24 @@ class _GroceryTripsState extends State<GroceryTrips> {
                 ],
               ),
             ));
+  }
+
+  Future<Null> _selectDate(BuildContext context) async {
+    DateFormat formatter =
+        DateFormat('dd/MM/yyyy'); //specifies day/month/year format
+
+    final DateTime? picked = await showDatePicker(
+        context: context,
+        initialDate: selectedDate,
+        firstDate: DateTime(1901, 1),
+        lastDate: DateTime(2100));
+    if (picked != null && picked != selectedDate)
+      setState(() {
+        selectedDate = picked;
+        _dateController.value = TextEditingValue(
+            text: formatter.format(
+                picked)); //Use formatter to format selected date and assign to text field
+      });
   }
 
   @override
@@ -172,23 +224,32 @@ class _GroceryTripsState extends State<GroceryTrips> {
                   margin: const EdgeInsets.all(10),
                   elevation: 3,
                   child: ListTile(
-                      title: Text(currentItem['trip_name']),
-                      subtitle: Text(currentItem['date'].toString()),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Edit button
-                          IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed: () =>
-                                  _showForm(context, currentItem['key'])),
-                          // Delete button
-                          IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () => _deleteItem(currentItem['key']),
-                          ),
-                        ],
-                      )),
+                    title: Text(currentItem['trip_name']),
+                    subtitle: Text(currentItem['date'].toString()),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Edit button
+                        IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: () =>
+                                _showForm(context, currentItem['key'])),
+                        // Delete button
+                        IconButton(
+                          icon: const Icon(Icons.delete),
+                          onPressed: () => _deleteItem(currentItem['key']),
+                        ),
+                      ],
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                GroceryList(tripDetails: _items[index]),
+                          ));
+                    },
+                  ),
                 );
               }),
       // Add new item button
@@ -199,7 +260,6 @@ class _GroceryTripsState extends State<GroceryTrips> {
     );
   }
 }
-
 
 // class GroceryTrips extends StatelessWidget {
 //   @override
