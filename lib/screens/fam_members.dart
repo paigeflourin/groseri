@@ -104,8 +104,7 @@ class _FamilyMembersState extends State<FamilyMembers> {
                 children: [
                   TextField(
                     controller: _nameController,
-                    decoration:
-                        const InputDecoration(hintText: 'Family Members'),
+                    decoration: const InputDecoration(hintText: 'Name'),
                   ),
                   const SizedBox(
                     height: 10,

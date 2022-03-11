@@ -13,7 +13,8 @@ class GroceryList extends StatefulWidget {
 }
 
 class _GroceryListState extends State<GroceryList> {
-  List<Map<String, dynamic>> _items = [];
+  List<dynamic> _items = [];
+  bool? _valueCheck = false;
   //Map<String, dynamic> tripDeet;
 
   final _groceryList = Hive.box('grocery_list');
@@ -29,19 +30,24 @@ class _GroceryListState extends State<GroceryList> {
   void _refreshItems() {
     //TODO: get the grocery list items where grocery trip ID
 
-    final data = _groceryList.keys.map((key) {
-      final value = _groceryList.get(key);
-      return {
-        "key": key,
-        "item_name": value["item_name"],
-        "quantity": value['quantity'],
-        "trip_id": widget.tripDetails['key'],
-        "family_members": widget.tripDetails['fam_members']
-      };
-    }).toList();
+    // final data = _groceryList.keys.map((key) {
+    //   final value = _groceryList.get(key);
+    //   return {
+    //     "key": key,
+    //     "item_name": value["item_name"],
+    //     "quantity": value['quantity'],
+    //     "trip_id": widget.tripDetails['key'],
+    //     "family_members": widget.tripDetails['fam_members']
+    //   };
+    // }).toList();
+
+    //final data = _groceryList.keys.map((key) {
+    final data = _groceryList.values
+        .where((element) => element['trip_id'] == widget.tripDetails['key']);
+    //}).toList();
 
     setState(() {
-      _items = data.reversed.toList();
+      _items = data.toList();
       // we use "reversed" to sort items in order from the latest to the oldest
     });
   }
@@ -75,9 +81,15 @@ class _GroceryListState extends State<GroceryList> {
         const SnackBar(content: Text('A grocery item has been deleted')));
   }
 
+  // Future<void> _toggleCheck(int itemKey, Map<String, dynamic> item) async {
+  //   item['is_done'] = !item['is_done'];
+  //   _updateItem(item['key'], item);
+  // }
+
   // TextFields' controllers
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _quantityController = TextEditingController();
+  bool _isDoneController = false;
 
   // This function will be triggered when the floating button is pressed
   // It will also be triggered when you want to update an item
@@ -90,6 +102,7 @@ class _GroceryListState extends State<GroceryList> {
           _items.firstWhere((element) => element['key'] == itemKey);
       _nameController.text = existingItem['item_name'];
       _quantityController.text = existingItem['quantity'];
+      _isDoneController = existingItem["is_done"];
     }
 
     showModalBottomSheet(
@@ -127,7 +140,9 @@ class _GroceryListState extends State<GroceryList> {
                       if (itemKey == null) {
                         _createItem({
                           "item_name": _nameController.text,
-                          "quantity": _quantityController.text
+                          "quantity": _quantityController.text,
+                          "trip_id": widget.tripDetails['key'],
+                          "is_done": false
                         });
                       }
 
@@ -135,7 +150,10 @@ class _GroceryListState extends State<GroceryList> {
                       if (itemKey != null) {
                         _updateItem(itemKey, {
                           'item_name': _nameController.text.trim(),
-                          'quantity': _quantityController.text.trim()
+                          'quantity': _quantityController.text.trim(),
+                          "trip_id":
+                              widget.tripDetails['key'].toString().trim(),
+                          "is_done": _isDoneController
                         });
                       }
 
@@ -154,6 +172,9 @@ class _GroceryListState extends State<GroceryList> {
               ),
             ));
   }
+
+  // final List<bool> _selected = _items.map(_items.length, (e) => false);
+  //final bool isChecked = false;
 
   @override
   Widget build(BuildContext context) {
@@ -178,23 +199,40 @@ class _GroceryListState extends State<GroceryList> {
                   margin: const EdgeInsets.all(10),
                   elevation: 3,
                   child: ListTile(
-                      title: Text(currentItem['item_name']),
-                      subtitle: Text(currentItem['quantity'].toString()),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Edit button
-                          IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed: () =>
-                                  _showForm(context, currentItem['key'])),
-                          // Delete button
-                          IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () => _deleteItem(currentItem['key']),
-                          ),
-                        ],
-                      )),
+                    title: Text(
+                      currentItem['item_name'],
+                      // style: TextStyle(
+                      //   fontSize: 18.0,
+                      //   decoration: _valueCheck
+                      //       ? TextDecoration.lineThrough
+                      //       : null,
+                      // ),
+                    ),
+                    subtitle: Text(currentItem['quantity'].toString()),
+                    leading: Checkbox(
+                        value: _valueCheck,
+                        onChanged: (bool? value) {
+                          setState(() {
+                            _valueCheck = value;
+                          });
+                        }),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Edit button
+                        IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: () =>
+                                _showForm(context, currentItem['key'])),
+                        // Delete button
+                        IconButton(
+                          icon: const Icon(Icons.delete),
+                          onPressed: () => _deleteItem(currentItem['key']),
+                        ),
+                      ],
+                    ),
+                    onLongPress: () {},
+                  ),
                 );
               }),
       // Add new item button
