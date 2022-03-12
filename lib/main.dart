@@ -12,7 +12,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 void main() async {
   await Hive.initFlutter();
-  await Hive.openBox('grocery_list');
+  Hive.registerAdapter(GroceryListAdapter());
+  await Hive.openBox<GroceryListData>('grocery_list');
   await Hive.openBox('grocery_trip');
   await Hive.openBox('family_members');
   runApp(MyApp());

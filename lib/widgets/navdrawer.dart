@@ -15,14 +15,10 @@ class NavDrawer extends StatelessWidget {
               'Side menu',
               style: TextStyle(color: Colors.white, fontSize: 25),
             ),
-            decoration: BoxDecoration(
-                color: Colors.blueAccent,
-                image: DecorationImage(
-                    fit: BoxFit.fill,
-                    image: AssetImage('assets/images/cover.jpg'))),
+            decoration: BoxDecoration(color: Colors.blueAccent),
           ),
           ListTile(
-            leading: Icon(Icons.input),
+            leading: Icon(Icons.home),
             title: Text('Home'),
             onTap: () {
               Navigator.pop(context);
@@ -30,7 +26,7 @@ class NavDrawer extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: Icon(Icons.verified_user),
+            leading: Icon(Icons.group),
             title: Text('Family Members'),
             onTap: () {
               Navigator.pop(context);
@@ -38,7 +34,7 @@ class NavDrawer extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: Icon(Icons.settings),
+            leading: Icon(Icons.local_grocery_store),
             title: Text('Grocery Trips'),
             onTap: () {
               Navigator.pop(context);
